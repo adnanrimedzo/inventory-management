@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model FxRate {
+  id        Int      @id @default(autoincrement())
+  currencyX String   @map("currency_x") @db.VarChar(3)
+  currencyY String   @map("currency_y") @db.VarChar(3)
+  rate      Decimal
+  date      DateTime @default(now())
+
+  @@index([currencyX, currencyY, date(sort: Desc)])
+  @@map("fx_rate")
+}
+
+model Transfer {
+  id                  Int      @id @default(autoincrement())
+  externalReferenceId String   @unique @map("external_reference_id")
+  currencyX           String   @map("currency_x") @db.VarChar(3)
+  currencyY           String   @map("currency_y") @db.VarChar(3)
+  amount              BigInt
+  senderId            Int      @map("sender_id")
+  receiverId          Int      @map("receiver_id")
+  status              String
+  date                DateTime @default(now())
+
+  @@index([currencyX, date(sort: Desc)])
+  @@index([currencyY, date(sort: Desc)])
+  @@index([status, date(sort: Desc)])
+  @@map("transfer")
+}
+
+model Settlement {
+  id         Int      @id @default(autoincrement())
+  transferId Int      @unique
+  currencyX  String   @map("currency_x") @db.VarChar(3)
+  currencyY  String   @map("currency_y") @db.VarChar(3)
+  rate       Decimal
+  margin     Decimal
+  amount     BigInt
+  status     String
+  date       DateTime
+
+  @@index([currencyX, date(sort: Desc)])
+  @@index([currencyY, date(sort: Desc)])
+  @@map("settlement")
+}
+
+model Liquidity {
+  id       Int      @id @default(autoincrement())
+  currency String   @unique
+  amount   BigInt
+  date     DateTime @default(now())
+  version  Int      @default(1)
+
+  @@map("liquidity")
+}
+
+model LiquidityHistory {
+  id       Int      @id @default(autoincrement())
+  currency String
+  amount   BigInt
+  date     DateTime
+
+  @@index([currency, date(sort: Desc)])
+  @@map("liquidity_history")
+}
+
+model Revenue {
+  id       Int      @id @default(autoincrement())
+  currency String   @unique
+  amount   BigInt
+  date     DateTime @default(now())
+  version  Int      @default(1)
+
+  @@map("revenue")
+}
